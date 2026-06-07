@@ -1,163 +1,128 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 
 public class BankBalanceGUI extends JFrame {
-
     private JTextField startingBalanceField;
     private JTextField amountField;
     private JLabel balanceLabel;
-
     private BankAccount2 account;
-
-    private DecimalFormat moneyFormat = new DecimalFormat("$#,##0.00");
+    private final DecimalFormat moneyFormat = new DecimalFormat("$#,##0.00");
 
     public BankBalanceGUI() {
-
         setTitle("Bank Balance Application");
-        setSize(400, 250);
+        setSize(450, 250);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(5, 2, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
 
-        JLabel startingBalanceLabel = new JLabel("Starting Balance:");
         startingBalanceField = new JTextField();
-
-        JLabel amountLabel = new JLabel("Deposit/Withdraw Amount:");
         amountField = new JTextField();
+        balanceLabel = new JLabel("Balance: $0.00");
 
         JButton createAccountButton = new JButton("Create Account");
         JButton depositButton = new JButton("Deposit");
         JButton withdrawButton = new JButton("Withdraw");
         JButton exitButton = new JButton("Exit");
 
-        balanceLabel = new JLabel("Balance: $0.00");
-
-        panel.add(startingBalanceLabel);
+        panel.add(new JLabel("Starting Balance:"));
         panel.add(startingBalanceField);
-
-        panel.add(amountLabel);
+        panel.add(new JLabel("Deposit/Withdraw Amount:"));
         panel.add(amountField);
-
         panel.add(createAccountButton);
         panel.add(balanceLabel);
-
         panel.add(depositButton);
         panel.add(withdrawButton);
-
         panel.add(exitButton);
 
         add(panel);
 
-        createAccountButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+        // IMPROVED: Lambda expressions replace repetitive anonymous inner classes.
+        createAccountButton.addActionListener(e -> createAccount());
+        depositButton.addActionListener(e -> depositMoney());
+        withdrawButton.addActionListener(e -> withdrawMoney());
+        exitButton.addActionListener(e -> exitApplication());
+    }
 
-                try {
-                    double startingBalance =
-                            Double.parseDouble(startingBalanceField.getText());
+    private void createAccount() {
+        try {
+            double startingBalance = Double.parseDouble(startingBalanceField.getText());
 
-                    account = new BankAccount2(startingBalance);
+            account = new BankAccount2(startingBalance);
+            updateBalanceLabel();
 
-                    balanceLabel.setText(
-                            "Balance: " +
-                            moneyFormat.format(account.getBalance()));
+            JOptionPane.showMessageDialog(this, "Account created successfully.");
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid starting balance.");
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
 
-                } catch (NumberFormatException ex) {
+    private void depositMoney() {
+        if (!accountExists()) {
+            return;
+        }
 
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Please enter a valid starting balance.");
-                }
-            }
-        });
+        try {
+            double amount = Double.parseDouble(amountField.getText());
 
-        depositButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+            account.deposit(amount);
+            updateBalanceLabel();
 
-                try {
+            JOptionPane.showMessageDialog(this, "Deposit successful.");
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid deposit amount.");
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
 
-                    if (account == null) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Please create an account first.");
-                        return;
-                    }
+    private void withdrawMoney() {
+        if (!accountExists()) {
+            return;
+        }
 
-                    double amount =
-                            Double.parseDouble(amountField.getText());
+        try {
+            double amount = Double.parseDouble(amountField.getText());
 
-                    account.deposit(amount);
+            account.withdraw(amount);
+            updateBalanceLabel();
 
-                    balanceLabel.setText(
-                            "Balance: " +
-                            moneyFormat.format(account.getBalance()));
+            JOptionPane.showMessageDialog(this, "Withdrawal successful.");
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid withdrawal amount.");
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage());
+        }
+    }
 
-                } catch (NumberFormatException ex) {
+    private boolean accountExists() {
+        if (account == null) {
+            JOptionPane.showMessageDialog(this, "Please create an account first.");
+            return false;
+        }
+        return true;
+    }
 
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Please enter a valid deposit amount.");
-                }
-            }
-        });
+    private void updateBalanceLabel() {
+        balanceLabel.setText("Balance: " + moneyFormat.format(account.getBalance()));
+    }
 
-        withdrawButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
+    private void exitApplication() {
+        if (account != null) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Remaining Balance: " + moneyFormat.format(account.getBalance())
+            );
+        } else {
+            JOptionPane.showMessageDialog(this, "No account was created.");
+        }
 
-                try {
-
-                    if (account == null) {
-                        JOptionPane.showMessageDialog(
-                                null,
-                                "Please create an account first.");
-                        return;
-                    }
-
-                    double amount =
-                            Double.parseDouble(amountField.getText());
-
-                    account.withdraw(amount);
-
-                    balanceLabel.setText(
-                            "Balance: " +
-                            moneyFormat.format(account.getBalance()));
-
-                } catch (NumberFormatException ex) {
-
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Please enter a valid withdrawal amount.");
-                }
-            }
-        });
-
-        exitButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-
-                if (account != null) {
-
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Remaining Balance: " +
-                            moneyFormat.format(account.getBalance()));
-
-                } else {
-
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "No account was created.");
-                }
-
-                System.exit(0);
-            }
-        });
+        System.exit(0);
     }
 
     public static void main(String[] args) {
-
         BankBalanceGUI app = new BankBalanceGUI();
         app.setVisible(true);
     }
